@@ -1,18 +1,12 @@
 ---
-title: API Reference
+title: Fuse Installer Format
 
-language_tabs: # must be one of https://git.io/vQNgJ
-  - shell
-  - ruby
-  - python
-  - javascript
+language_tabs:  
+  - yaml
+  - json
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
   - <a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a>
-
-includes:
-  - errors
 
 search: true
 
@@ -21,221 +15,143 @@ code_clipboard: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the Fuse Installer Format documentation! This documentation will provide you with everything you need to know about making Fuse Installers.
 
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+Fuse allows you to direct mod managers such as Vortex or Mod Organizer to display a GUI from which users can select options to customize how your mod is installed.
 
-This example API documentation page was created with [Slate](https://github.com/slatedocs/slate). Feel free to edit it and use it as a base for your own API's documentation.
+Fuse allows you to give mod users the option to install your mod's files as a BSA or loose.  Fuse also allows you to combine the content of multiple ESP files at install time using ESP fragments.  You can even use formulas to set values in plugin files based on variables input by users at install time.
 
-# Authentication
+Fuse works with both JSON and YAML files.  You can view examples in the dark area to the right.
 
-> To authorize, use this code:
+# Installer file
 
-```ruby
-require 'kittn'
+## Metadata
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
+> This section is required.
+
+```yaml
+---
+metadata:
+  schema: fuse
+  version: '0.1'
+  type: installer
+  game: TES5
+  modName: My Awesome Mod
+  modAuthor: Me
+  modVersion: '1.0'
 ```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-```
-
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-```
-
-> Make sure to replace `meowmeowmeow` with your API key.
-
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
-
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
-
-`Authorization: meowmeowmeow`
-
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
-</aside>
-
-# Kittens
-
-## Get All Kittens
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
+{
+    "metadata": {
+        "schema": "fuse",
+        "version": "0.1",
+        "type": "installer",
+        "games": ["TES5", "SSE"],
+        "modName": "My Awesome Mod",
+        "modAuthor": "Me",
+        "modVersion": "1.0"
+    }
 ```
 
-This endpoint retrieves all kittens.
+> Make sure to replace `game`, `modName`, `modAuthor`, and `modVersion`with values for your mod.
 
-### HTTP Request
+The metadata associated with your installer.
 
-`GET http://example.com/api/kittens`
+### Properties
 
-### Query Parameters
+| Key        | Type   | Description                                                  |
+| ---------- | ------ | ------------------------------------------------------------ |
+| schema     | string | Used to verify the file is a fuse installer.                 |
+| version    | string | The fuse version your installer was built to target.         |
+| type       | string | The fuse file type.                                          |
+| game       | string | The game your installer should be used with.                 |
+| modName    | string | Your mod's name.                                             |
+| modAuthor  | string | The name of the author or authors who created the mod.       |
+| modVersion | string | The mod's current version.  Using SemVer is strongly recommended. |
 
-Parameter | Default | Description
+### Games
+
+| Identifier | Description                    |
+| ---------- | ------------------------------ |
+| TES5       | The Elder Scrolls V: Skyrim    |
+| SSE        | Skyrim: Special Edition        |
+| FO4        | Fallout 4                      |
+| FO3        | Fallout 3                      |
+| FNV        | Fallout: New Vegas             |
+| TES4       | The Elder Scrolls IV: Oblivion |
+
+## Plugin files
+
+> This section is optional.
+
+```yaml
+pluginFiles:
+- type: modify
+  filename: MyMod.esp
+  sources:
+  - health.yaml
+  - damage.yaml
+```
+
+```json
+    "pluginFiles": [{
+        "type": "modify",
+        "filename": "MyBasePlugin.esp",
+        "sources": [
+            "health.json",
+            "damage.json"
+        ]
+    }],
+```
+
+The plugin files to create or modify.
+
+### Properties
+
+Key | Type | Description
 --------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
+type | string | If set to `modify`, will modify an existing plugin file provided with the installer.  <br/>If set to `create`, will create a new plugin file. 
+filename | string | The file name of the plugin to modify or create. 
+sources | array | The file paths to include in the plugin file.  These paths are resolved relative to the `fuse` folder in your installation archive.  These must be paths to JSON, YAML, or ESP files. 
 
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
+## Asset files
 
-## Get a Specific Kitten
+> This section is optional.
 
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
+```yaml
+assetFiles:
+- type: archive
+  filename: MyMod.bsa
+  sources:
+  - type: folder
+    path: data
+    exclude: excludeAssets
 ```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
 
 ```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
-}
+    "assetFiles": [{
+        "type": "bsa",
+        "filename": "MyMod.bsa",
+        "sources": [{
+            "type": "folder",
+            "path": "data",
+            "exclude": "excludeAssets"
+        }]
+    }]
 ```
 
-This endpoint retrieves a specific kitten.
+The asset files to install.
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+### Asset file entry properties
 
-### HTTP Request
+| Key      | Type   | Description                                                 |
+| -------- | ------ | ----------------------------------------------------------- |
+| type     | string | The type of asset to install.  Can be `archive` or `loose`. |
+| filename | string | The name of the archive file to create.                     |
+| sources  | array  | Array of source entries to use.                             |
 
-`GET http://example.com/kittens/<ID>`
+## Screens
 
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
-
-## Delete a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "deleted" : ":("
-}
-```
-
-This endpoint deletes a specific kitten.
-
-### HTTP Request
-
-`DELETE http://example.com/kittens/<ID>`
-
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
+> This section is required.
 
